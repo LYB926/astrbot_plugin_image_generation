@@ -30,6 +30,7 @@ class ImageGenerator:
             GiteeAIAdapter,
             GrokAdapter,
             Jimeng2APIAdapter,
+            ModelScopeAdapter,
             OpenAIAdapter,
             OpenAIChatAdapter,
             SiliconFlowAdapter,
@@ -47,6 +48,7 @@ class ImageGenerator:
             AdapterType.JIMENG2API: Jimeng2APIAdapter,
             AdapterType.GROK: GrokAdapter,
             AdapterType.CODEX_RESPONSES: CodexResponsesAdapter,
+            AdapterType.MODELSCOPE: ModelScopeAdapter,
             AdapterType.CUSTOM_HTTP: CustomHTTPAdapter,
         }
 

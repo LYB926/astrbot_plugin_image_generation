@@ -297,6 +297,11 @@
             "labels": ["文生图", "图生图"]
           }
         },
+        "modelscope": {
+          "capability_options": {
+            "labels": ["文生图", "图生图", "宽高比", "分辨率"]
+          }
+        },
         "custom_http": {
           "request_method": {
             "labels": [
