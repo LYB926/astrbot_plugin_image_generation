@@ -631,6 +631,59 @@
             "hint": "Set to 0 to use the retry count from Runtime Control. API keys are rotated between retry attempts."
           }
         },
+        "modelscope": {
+          "name": "ModelScope asynchronous API",
+          "hint": "Calls the ModelScope API-Inference asynchronous image API. The plugin submits a task, polls its state, and downloads the result without creating a second task after task_id is received.",
+          "base_url": {
+            "description": "API endpoint",
+            "hint": "Defaults to https://api-inference.modelscope.cn. You may enter the service root or an address ending in /v1; the plugin appends image-generation and task-status paths."
+          },
+          "proxy": {
+            "description": "Proxy URL",
+            "hint": "Optional. Example: http://127.0.0.1:7890."
+          },
+          "api_keys": {
+            "description": "API keys",
+            "hint": "Enter ModelScope Access Tokens. One accepted remote task keeps the token chosen for its submission."
+          },
+          "available_models": {
+            "description": "Available models",
+            "hint": "Used by the /生图模型 command. Keep this list aligned with models available through API-Inference."
+          },
+          "capability_options": {
+            "description": "Model capabilities",
+            "hint": "Qwen/Qwen-Image defaults to text-to-image only. Enable image-to-image only after confirming the selected model supports editing; aspect ratio and resolution use configured size mappings.",
+            "labels": ["Text to image", "Image to image", "Aspect ratio", "Resolution"]
+          },
+          "timeout": {
+            "description": "Timeout override (seconds)",
+            "hint": "Timeout for one submit or poll HTTP request. Set to 0 to use Runtime Control."
+          },
+          "max_retry_attempts": {
+            "description": "Retry count override",
+            "hint": "Only applies before a remote task is confirmed. After task_id is received, the plugin only polls or downloads that task and never resubmits it. Set to 0 to use Runtime Control."
+          },
+          "async_poll_interval": {
+            "description": "Async poll interval (seconds)",
+            "hint": "Wait time between status checks while the remote task is unfinished."
+          },
+          "async_poll_timeout": {
+            "description": "Async total wait time (seconds)",
+            "hint": "Total status-check and result-download budget after task_id is received. A timeout never resubmits the task."
+          },
+          "negative_prompt": {
+            "description": "Negative prompt",
+            "hint": "Optional. Sent to ModelScope image models that support negative_prompt."
+          },
+          "default_size": {
+            "description": "Default size",
+            "hint": "Fixed WxH size sent by default, such as 1024x1024. Clear it to map the plugin aspect ratio and resolution to size."
+          },
+          "size_map_json": {
+            "description": "Size-map JSON",
+            "hint": "Optional JSON object. Keys can be resolution:aspect ratio (for example 1K:1:1), resolution, aspect ratio, or default; values must be WxH strings."
+          }
+        },
         "custom_http": {
           "name": "Custom HTTP API (Beta)",
           "hint": "Advanced configuration: customize JSON request bodies, request headers, and response image extraction paths for HTTP image APIs that return base64, data URLs, or image URLs.",

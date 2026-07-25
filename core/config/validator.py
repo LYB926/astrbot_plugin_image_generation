@@ -28,6 +28,8 @@ MIN_NUMBER_VALUES: dict[str, int | float] = {
     "api_providers.*.sequential_max_images": 1,
     "api_providers.*.max_reference_images": 1,
     "api_providers.*.steps": 0,
+    "api_providers.*.async_poll_interval": 1,
+    "api_providers.*.async_poll_timeout": 1,
     "generation_runtime.timeout": 1,
     "generation_runtime.max_retry_attempts": 0,
     "generation_runtime.non_retryable_status_codes": 100,

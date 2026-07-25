@@ -1,4 +1,9 @@
 ### 更新日志
+- **v1.6.0-2026-07-25**
+  - 新增 `modelscope` 专用异步图像适配器，支持 ModelScope API-Inference 的提交、任务状态轮询和 `output_images` 下载。
+  - 异步任务在收到远端 `task_id` 后固定使用同一 API Key；远端失败、未知状态、超时或最终下载失败不会重新提交任务，避免重复生成和重复计费。
+  - 新增 ModelScope 中英文配置模板、轮询/总等待时间/反向提示词/尺寸映射配置，以及 ModelScope 使用文档。
+
 - **v1.5.3-2026-07-22**
   - 新增 `codex_responses` 专用图片生成适配器，固定请求 `POST /codex/responses`，发送 `model`、`input` 和带 `output_format=png` 的 `image_generation` 工具；支持 Responses 多模态 `input_image` 图生图。
   - 支持解析 Responses 风格 `output[*].type == image_generation_call` 的 `result` 图片数据，并兼容 Base64、data URL、图片 URL 与常见中转包装字段。

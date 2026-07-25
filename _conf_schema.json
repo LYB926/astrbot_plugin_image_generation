@@ -899,6 +899,124 @@
           }
         }
       },
+      "modelscope": {
+        "name": "ModelScope 异步接口",
+        "hint": "调用 ModelScope API-Inference 异步图像生成接口。插件会提交任务、轮询状态并下载结果；提交成功后不会自动创建第二个远端任务。",
+        "display_item": "name",
+        "hide_hint_in_list": true,
+        "items": {
+          "name": {
+            "description": "供应商名称",
+            "hint": "用于显示和模型选择；格式为“供应商名称/模型名称”。",
+            "type": "string",
+            "default": "ModelScope"
+          },
+          "base_url": {
+            "description": "接口地址",
+            "hint": "默认使用 https://api-inference.modelscope.cn。可填写服务根地址或带 /v1 的地址，插件会自动拼接图像生成和任务查询路径。",
+            "type": "string",
+            "default": "https://api-inference.modelscope.cn"
+          },
+          "proxy": {
+            "description": "代理地址",
+            "hint": "可选，示例：http://127.0.0.1:7890。",
+            "type": "string",
+            "default": ""
+          },
+          "api_keys": {
+            "description": "API 密钥",
+            "hint": "填写 ModelScope Access Token；一个远端任务会固定使用提交时选中的 Token。",
+            "type": "list",
+            "default": []
+          },
+          "available_models": {
+            "description": "可用模型列表",
+            "hint": "用于 /生图模型 命令切换；请按 API-Inference 实际可用模型维护。",
+            "type": "list",
+            "default": [
+              "Qwen/Qwen-Image"
+            ]
+          },
+          "capability_options": {
+            "description": "模型能力",
+            "hint": "默认 Qwen/Qwen-Image 仅声明文生图。只有确认当前模型支持图片编辑时，才勾选图生图；宽高比和分辨率会通过配置的尺寸映射转为 size。",
+            "type": "list",
+            "options": [
+              "文生图",
+              "图生图",
+              "宽高比",
+              "分辨率"
+            ],
+            "default": [
+              "文生图"
+            ]
+          },
+          "timeout": {
+            "description": "超时时间覆盖（秒）",
+            "hint": "单次提交或轮询 HTTP 请求的超时；填 0 表示使用“运行控制”中的超时时间。",
+            "type": "int",
+            "slider": {
+              "min": 0,
+              "max": 600,
+              "step": 10
+            },
+            "default": 0
+          },
+          "max_retry_attempts": {
+            "description": "重试次数覆盖",
+            "hint": "仅在远端任务尚未确认创建时适用；收到 task_id 后只会对同一任务轮询或下载，不会重新提交。填 0 使用“运行控制”中的重试次数。",
+            "type": "int",
+            "slider": {
+              "min": 0,
+              "max": 10,
+              "step": 1
+            },
+            "default": 0
+          },
+          "async_poll_interval": {
+            "description": "异步轮询间隔（秒）",
+            "hint": "远端任务未结束时两次状态查询之间的等待时间。",
+            "type": "int",
+            "slider": {
+              "min": 1,
+              "max": 60,
+              "step": 1
+            },
+            "default": 5
+          },
+          "async_poll_timeout": {
+            "description": "异步总等待时间（秒）",
+            "hint": "从获得 task_id 后开始计算的状态查询和结果下载总预算；超时不会重新提交任务。",
+            "type": "int",
+            "slider": {
+              "min": 1,
+              "max": 1800,
+              "step": 10
+            },
+            "default": 600
+          },
+          "negative_prompt": {
+            "description": "反向提示词",
+            "hint": "可选。发送到支持 negative_prompt 的 ModelScope 图像模型。",
+            "type": "text",
+            "default": ""
+          },
+          "default_size": {
+            "description": "默认尺寸",
+            "hint": "默认固定发送的尺寸，格式为 WxH，例如 1024x1024。清空后会按插件的宽高比和分辨率映射为 size。",
+            "type": "string",
+            "default": "1024x1024"
+          },
+          "size_map_json": {
+            "description": "尺寸映射 JSON",
+            "hint": "可选 JSON 对象。键可为“分辨率:宽高比”（如 1K:1:1）、分辨率、宽高比或 default，值必须为 WxH，例如 {\"1K:1:1\":\"1024x1024\",\"default\":\"1024x1024\"}。",
+            "type": "string",
+            "editor_mode": true,
+            "editor_language": "json",
+            "default": "{}"
+          }
+        }
+      },
       "codex_responses": {
         "name": "Codex Responses 接口",
         "hint": "调用固定的 POST /codex/responses 图像生成接口。请求体固定使用 model、input 和 image_generation 工具（output_format=png），并要求接口在同一次响应中返回图片。",

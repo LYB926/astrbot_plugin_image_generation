@@ -7,6 +7,7 @@ from .gemini_adapter import GeminiAdapter
 from .gitee_ai_adapter import GiteeAIAdapter
 from .grok_adapter import GrokAdapter
 from .jimeng2api_adapter import Jimeng2APIAdapter
+from .modelscope_adapter import ModelScopeAdapter
 from .openai_adapter import OpenAIAdapter
 from .openai_chat_adapter import OpenAIChatAdapter
 from .siliconflow_adapter import SiliconFlowAdapter
@@ -24,4 +25,5 @@ __all__ = [
     "VolcengineArkAdapter",
     "Jimeng2APIAdapter",
     "GrokAdapter",
+    "ModelScopeAdapter",
 ]

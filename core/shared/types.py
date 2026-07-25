@@ -19,6 +19,7 @@ class AdapterType(str, enum.Enum):
     JIMENG2API = "jimeng2api"
     GROK = "grok"
     CODEX_RESPONSES = "codex_responses"
+    MODELSCOPE = "modelscope"
     CUSTOM_HTTP = "custom_http"
 
 
