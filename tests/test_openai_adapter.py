@@ -71,6 +71,15 @@ class _StreamContent:
             yield chunk
 
 
+class _CompletedThenTimeoutContent:
+    def iter_any(self):
+        return self._iterate()
+
+    async def _iterate(self):
+        yield (b'data: {"type":"image_generation.completed","b64_json":"aW1hZ2U="}\n\n')
+        raise asyncio.TimeoutError()
+
+
 class _Response:
     status = 200
     headers = {"Content-Type": "application/json"}
@@ -160,6 +169,20 @@ class OpenAIAdapterTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(data["data"][0]["b64_json"], encoded)
 
+    async def test_sse_completed_event_with_data_array_stops_reading(self):
+        encoded = base64.b64encode(b"image").decode()
+        event = json.dumps(
+            {
+                "type": "image_generation.completed",
+                "data": [{"b64_json": encoded}],
+            }
+        )
+        response = _Response(chunks=[f"data: {event}\n\n".encode()])
+
+        data = await _adapter(_Session())._read_stream_response(response, "task")
+
+        self.assertEqual(data["data"][0]["b64_json"], encoded)
+
     async def test_url_download_uses_provider_timeout(self):
         session = _Session()
         images, error = await _adapter(session)._extract_images(
@@ -179,7 +202,45 @@ class OpenAIAdapterTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertIsNone(images)
-        self.assertEqual(error, "TimeoutError: TimeoutError()")
+        self.assertEqual(error, "TimeoutError")
+
+    async def test_completed_sse_event_stops_reading_before_later_timeout(self):
+        response = _Response()
+        response.headers = {"Content-Type": "text/event-stream"}
+        response.content = _CompletedThenTimeoutContent()
+        adapter = _adapter(_Session(post_response=response), retries=3)
+        calls = 0
+        generate_once = adapter._generate_once
+
+        async def counted_generate_once(request):
+            nonlocal calls
+            calls += 1
+            return await generate_once(request)
+
+        adapter._generate_once = counted_generate_once
+        result = await adapter.generate(GenerationRequest(prompt="test"))
+
+        self.assertEqual(calls, 1)
+        self.assertEqual(result.images, [b"image"])
+        self.assertIsNone(result.error)
+
+    async def test_empty_exception_repr_is_not_returned(self):
+        class SensitiveBlankError(Exception):
+            def __str__(self):
+                return ""
+
+            def __repr__(self):
+                return "SensitiveBlankError('Bearer top-secret-token-value')"
+
+        session = _Session()
+        session.post = lambda *_args, **_kwargs: _Context(error=SensitiveBlankError())
+
+        images, error = await _adapter(session)._generate_once(
+            GenerationRequest(prompt="test")
+        )
+
+        self.assertIsNone(images)
+        self.assertEqual(error, "SensitiveBlankError")
 
     async def test_download_failure_does_not_resubmit_generation(self):
         session = _Session(get_error=asyncio.TimeoutError())

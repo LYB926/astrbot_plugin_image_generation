@@ -113,9 +113,7 @@ class OpenAIAdapter(BaseImageAdapter):
         except Exception as e:
             duration = time.time() - start_time
             self._log_request_exception(request, duration, e)
-            error_detail = safe_log_error_body(e)
-            if not error_detail:
-                error_detail = f"{type(e).__name__}: {e!r}"
+            error_detail = safe_log_error_body(e) or type(e).__name__
             return None, error_detail
 
     async def _read_stream_response(
@@ -127,16 +125,16 @@ class OpenAIAdapter(BaseImageAdapter):
         data_lines: list[str] = []
         stream_error: str | None = None
 
-        def collect_event(payload_text: str) -> None:
+        def collect_event(payload_text: str) -> bool:
             nonlocal stream_error
             if not payload_text or payload_text == "[DONE]":
-                return
+                return False
             try:
                 event = json.loads(payload_text)
             except json.JSONDecodeError:
-                return
+                return False
             if not isinstance(event, dict):
-                return
+                return False
 
             event_type = str(event.get("type", "")).strip().lower()
             if event_type in {"error", "upstream_error"} or event.get("error"):
@@ -145,13 +143,20 @@ class OpenAIAdapter(BaseImageAdapter):
                     stream_error = str(error.get("message") or error)
                 else:
                     stream_error = str(event.get("message") or error)
-            elif isinstance(event.get("data"), list):
-                images.extend(item for item in event["data"] if isinstance(item, dict))
             elif event_type in {
                 "image_generation.completed",
                 "image_edit.completed",
             }:
-                images.append(event)
+                if isinstance(event.get("data"), list):
+                    images.extend(
+                        item for item in event["data"] if isinstance(item, dict)
+                    )
+                else:
+                    images.append(event)
+                return True
+            elif isinstance(event.get("data"), list):
+                images.extend(item for item in event["data"] if isinstance(item, dict))
+            return False
 
         async for chunk in response.content.iter_any():
             buffer += chunk.decode("utf-8", errors="replace")
@@ -163,8 +168,10 @@ class OpenAIAdapter(BaseImageAdapter):
                 if line or not data_lines:
                     continue
 
-                collect_event("\n".join(data_lines).strip())
+                completed = collect_event("\n".join(data_lines).strip())
                 data_lines.clear()
+                if completed:
+                    return {"data": images}
 
         if buffer.rstrip("\r").startswith("data:"):
             data_lines.append(buffer.rstrip("\r")[5:].lstrip())
@@ -277,7 +284,7 @@ class OpenAIAdapter(BaseImageAdapter):
                 except Exception as exc:
                     duration = time.time() - download_start
                     detail = safe_log_error_body(exc) or type(exc).__name__
-                    download_error = f"{type(exc).__name__}: {exc!r}"
+                    download_error = detail
                     logger.error(
                         f"{prefix} 图片下载失败: 耗时={duration:.2f}秒, "
                         f"错误={detail}, 地址={safe_log_url(image_url)}"
