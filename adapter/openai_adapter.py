@@ -124,6 +124,7 @@ class OpenAIAdapter(BaseImageAdapter):
         buffer = ""
         data_lines: list[str] = []
         stream_error: str | None = None
+        completed = False
 
         def collect_event(payload_text: str) -> bool:
             nonlocal stream_error
@@ -171,12 +172,15 @@ class OpenAIAdapter(BaseImageAdapter):
                 completed = collect_event("\n".join(data_lines).strip())
                 data_lines.clear()
                 if completed:
-                    return {"data": images}
+                    break
+            if completed:
+                break
 
-        if buffer.rstrip("\r").startswith("data:"):
-            data_lines.append(buffer.rstrip("\r")[5:].lstrip())
-        if data_lines:
-            collect_event("\n".join(data_lines).strip())
+        if not completed:
+            if buffer.rstrip("\r").startswith("data:"):
+                data_lines.append(buffer.rstrip("\r")[5:].lstrip())
+            if data_lines:
+                collect_event("\n".join(data_lines).strip())
 
         if stream_error:
             raise RuntimeError(f"Image stream error: {stream_error}")

@@ -8,6 +8,7 @@ import sys
 import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 class _Logger:
@@ -182,6 +183,44 @@ class OpenAIAdapterTests(unittest.IsolatedAsyncioTestCase):
         data = await _adapter(_Session())._read_stream_response(response, "task")
 
         self.assertEqual(data["data"][0]["b64_json"], encoded)
+
+    async def test_sse_error_before_completed_event_takes_precedence(self):
+        encoded = base64.b64encode(b"image").decode()
+        error_event = json.dumps(
+            {"type": "error", "error": {"message": "provider failed"}}
+        )
+        completed_event = json.dumps(
+            {"type": "image_generation.completed", "b64_json": encoded}
+        )
+        response = _Response(
+            chunks=[
+                f"data: {error_event}\n\n".encode(),
+                f"data: {completed_event}\n\n".encode(),
+            ]
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "provider failed"):
+            await _adapter(_Session())._read_stream_response(response, "task")
+
+    async def test_sse_completed_event_logs_debug_summary(self):
+        encoded = base64.b64encode(b"image").decode()
+        event = json.dumps({"type": "image_generation.completed", "b64_json": encoded})
+        response = _Response(chunks=[f"data: {event}\n\n".encode()])
+        adapter = _adapter(_Session())
+        adapter.debug_request_logging = True
+
+        with patch.object(adapter, "_log_debug_json") as log_debug_json:
+            data = await adapter._read_stream_response(response, "task")
+
+        self.assertEqual(data["data"][0]["b64_json"], encoded)
+        log_debug_json.assert_called_once_with(
+            "SSE response",
+            {
+                "event_count": 1,
+                "image_fields": [["type", "b64_json"]],
+            },
+            "task",
+        )
 
     async def test_url_download_uses_provider_timeout(self):
         session = _Session()
