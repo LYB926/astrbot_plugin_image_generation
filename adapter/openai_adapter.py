@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import base64
-import json
 import time
 from typing import Any
 
@@ -11,7 +10,7 @@ from astrbot.api import logger
 
 from ..core.adapters.base import BaseImageAdapter
 from ..core.shared.constants import UNSPECIFIED_OPTION
-from ..core.shared.logging import safe_log_error_body, safe_log_url
+from ..core.shared.logging import safe_log_error_body
 from ..core.shared.types import GenerationRequest, ImageCapability
 
 
@@ -71,8 +70,6 @@ class OpenAIAdapter(BaseImageAdapter):
             url = f"{base}/v1/images/generations"
             headers["Content-Type"] = "application/json"
             payload = self._build_payload(request)
-            if is_gpt:
-                payload["stream"] = True
             kwargs = {"json": payload}
             self._log_request_overview(request, url, payload=payload)
             self._log_debug_json("请求", payload, request.task_id)
@@ -101,88 +98,12 @@ class OpenAIAdapter(BaseImageAdapter):
                         resp.status,
                         error_text,
                     )
-                if (
-                    is_gpt
-                    and "text/event-stream"
-                    in resp.headers.get("Content-Type", "").lower()
-                ):
-                    data = await self._read_stream_response(resp, request.task_id)
-                else:
-                    data = await self._read_response_json(resp, request.task_id)
-                return await self._extract_images(data, request.task_id)
+                data = await self._read_response_json(resp, request.task_id)
+                return await self._extract_images(data)
         except Exception as e:
             duration = time.time() - start_time
             self._log_request_exception(request, duration, e)
-            error_detail = safe_log_error_body(e)
-            if not error_detail:
-                error_detail = f"{type(e).__name__}: {e!r}"
-            return None, error_detail
-
-    async def _read_stream_response(
-        self, response: aiohttp.ClientResponse, task_id: str | None
-    ) -> dict[str, Any]:
-        """Collect completed image events from an OpenAI-compatible SSE response."""
-        images: list[dict[str, Any]] = []
-        buffer = ""
-        data_lines: list[str] = []
-        stream_error: str | None = None
-
-        def collect_event(payload_text: str) -> None:
-            nonlocal stream_error
-            if not payload_text or payload_text == "[DONE]":
-                return
-            try:
-                event = json.loads(payload_text)
-            except json.JSONDecodeError:
-                return
-            if not isinstance(event, dict):
-                return
-
-            event_type = str(event.get("type", "")).strip().lower()
-            if event_type in {"error", "upstream_error"} or event.get("error"):
-                error = event.get("error")
-                if isinstance(error, dict):
-                    stream_error = str(error.get("message") or error)
-                else:
-                    stream_error = str(event.get("message") or error)
-            elif isinstance(event.get("data"), list):
-                images.extend(item for item in event["data"] if isinstance(item, dict))
-            elif event_type in {
-                "image_generation.completed",
-                "image_edit.completed",
-            }:
-                images.append(event)
-
-        async for chunk in response.content.iter_any():
-            buffer += chunk.decode("utf-8", errors="replace")
-            while "\n" in buffer:
-                line, buffer = buffer.split("\n", 1)
-                line = line.rstrip("\r")
-                if line.startswith("data:"):
-                    data_lines.append(line[5:].lstrip())
-                if line or not data_lines:
-                    continue
-
-                collect_event("\n".join(data_lines).strip())
-                data_lines.clear()
-
-        if buffer.rstrip("\r").startswith("data:"):
-            data_lines.append(buffer.rstrip("\r")[5:].lstrip())
-        if data_lines:
-            collect_event("\n".join(data_lines).strip())
-
-        if stream_error:
-            raise RuntimeError(f"Image stream error: {stream_error}")
-
-        self._log_debug_json(
-            "SSE response",
-            {
-                "event_count": len(images),
-                "image_fields": [list(item) for item in images],
-            },
-            task_id,
-        )
-        return {"data": images}
+            return None, safe_log_error_body(e)
 
     def _build_payload(self, request: GenerationRequest) -> dict:
         """Build the request payload."""
@@ -242,59 +163,25 @@ class OpenAIAdapter(BaseImageAdapter):
         return mapping.get(aspect_ratio)
 
     async def _extract_images(
-        self, response: dict, task_id: str | None = None
+        self, response: dict
     ) -> tuple[list[bytes] | None, str | None]:
         """Extract image bytes from the response payload."""
         if "data" not in response:
             return None, "响应中未找到 data 字段"
 
         images = []
-        download_error: str | None = None
         for item in response["data"]:
             if "b64_json" in item:
                 images.append(base64.b64decode(item["b64_json"]))
             elif "url" in item:
                 # Download URL results even though b64_json is requested.
-                image_url = str(item["url"])
-                download_start = time.time()
-                prefix = self._get_log_prefix(task_id)
-                logger.debug(f"{prefix} 图片下载开始: 地址={safe_log_url(image_url)}")
-                try:
-                    async with self._get_session().get(
-                        image_url,
-                        proxy=self.proxy,
-                        timeout=self._get_timeout(),
-                    ) as resp:
-                        duration = time.time() - download_start
-                        logger.debug(
-                            f"{prefix} 图片下载响应: 状态码={resp.status}, "
-                            f"耗时={duration:.2f}秒, 地址={safe_log_url(image_url)}"
-                        )
-                        if resp.status == 200:
-                            images.append(await resp.read())
-                        else:
-                            download_error = f"HTTP {resp.status}"
-                except Exception as exc:
-                    duration = time.time() - download_start
-                    detail = safe_log_error_body(exc) or type(exc).__name__
-                    download_error = f"{type(exc).__name__}: {exc!r}"
-                    logger.error(
-                        f"{prefix} 图片下载失败: 耗时={duration:.2f}秒, "
-                        f"错误={detail}, 地址={safe_log_url(image_url)}"
-                    )
+                async with self._get_session().get(
+                    item["url"], proxy=self.proxy, timeout=self._get_download_timeout()
+                ) as resp:
+                    if resp.status == 200:
+                        images.append(await resp.read())
 
         if not images:
-            if download_error:
-                return (
-                    None,
-                    f"图片下载失败（生成请求已完成，请勿自动重试）: {download_error}",
-                )
             return None, "未找到有效的图片数据"
 
         return images, None
-
-    def _is_retryable_error(self, error: str) -> bool:
-        """Avoid resubmitting a generation after only its result download failed."""
-        if error.startswith("图片下载失败（生成请求已完成"):
-            return False
-        return super()._is_retryable_error(error)
