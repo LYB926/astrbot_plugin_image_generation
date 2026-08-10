@@ -189,9 +189,13 @@ class CustomHTTPAdapter(BaseImageAdapter):
             "reference_images_count": len(request.images),
             "reference_images": image_data_urls,
             "reference_images_base64": image_base64,
-            "reference_images_base64_nullable": image_base64 if len(image_base64) > 0 else None,
+            "reference_images_base64_nullable": image_base64
+            if len(image_base64) > 0
+            else None,
             "reference_images_data_url": image_data_urls,
-            "reference_images_data_url_nullable": image_data_urls if len(image_data_urls) > 0 else None,
+            "reference_images_data_url_nullable": image_data_urls
+            if len(image_data_urls) > 0
+            else None,
             "reference_images_mime_types": image_mime_types,
             "reference_image_0": first_data_url,
             "reference_image_0_base64": first_base64,
