@@ -1,4 +1,8 @@
 ### 更新日志
+- **v1.6.2-2026-08-10**
+  - 修复 OpenAI / Grok 图生图上传格式：按真实 MIME 设置参考图文件名扩展名，避免兼容接口把 JPEG 误判为 PNG；Grok 图生图改为 `multipart/form-data` 通过 `image` 字段上传（#59）。
+  - 自定义 HTTP 适配器新增可空参考图占位符 `{reference_images_base64_nullable}` / `{reference_images_data_url_nullable}`：无参考图时省略对应 JSON 字段，兼容要求参考图数组至少 1 项的接口（#58）。
+
 - **v1.6.1-2026-08-03**
   - OpenAI GPT Image 文生图请求启用 SSE，支持解析跨传输分块的完成与错误事件，并保留非 SSE JSON 响应兼容。
   - URL 图片结果下载改用供应商超时时间；生成已完成但下载失败时不再自动重新提交付费生成请求。
