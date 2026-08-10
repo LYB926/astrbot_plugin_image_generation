@@ -85,7 +85,9 @@ class CodexResponsesAdapter(BaseImageAdapter):
                 if content_type.startswith("image/"):
                     return [body], None
 
-                response_data, parse_error = self._parse_response_json(body, request.task_id)
+                response_data, parse_error = self._parse_response_json(
+                    body, request.task_id
+                )
                 if parse_error:
                     return None, parse_error
                 if not isinstance(response_data, dict):
@@ -120,9 +122,7 @@ class CodexResponsesAdapter(BaseImageAdapter):
             payload["input"] = request.prompt
             return payload
 
-        content: list[dict[str, str]] = [
-            {"type": "input_text", "text": request.prompt}
-        ]
+        content: list[dict[str, str]] = [{"type": "input_text", "text": request.prompt}]
         for image in request.images:
             encoded = base64.b64encode(image.data).decode("ascii")
             content.append(
@@ -231,7 +231,10 @@ class CodexResponsesAdapter(BaseImageAdapter):
         output = response_data.get("output")
         if isinstance(output, list):
             for item in output:
-                if not isinstance(item, dict) or item.get("type") != "image_generation_call":
+                if (
+                    not isinstance(item, dict)
+                    or item.get("type") != "image_generation_call"
+                ):
                     continue
                 images.extend(await self._decode_call_images(item, task_id))
 
@@ -287,12 +290,22 @@ class CodexResponsesAdapter(BaseImageAdapter):
             return images
         if isinstance(value, dict):
             images: list[bytes] = []
-            for field in ("result", "result_b64", "b64_json", "base64", "image", "data", "url"):
+            for field in (
+                "result",
+                "result_b64",
+                "b64_json",
+                "base64",
+                "image",
+                "data",
+                "url",
+            ):
                 if field in value:
                     images.extend(await self._decode_image_value(value[field], task_id))
             image_url = value.get("image_url")
             if isinstance(image_url, dict):
-                images.extend(await self._decode_image_value(image_url.get("url"), task_id))
+                images.extend(
+                    await self._decode_image_value(image_url.get("url"), task_id)
+                )
             elif image_url:
                 images.extend(await self._decode_image_value(image_url, task_id))
             return images
@@ -374,7 +387,9 @@ class CodexResponsesAdapter(BaseImageAdapter):
                         "status": item.get("status"),
                         "keys": sorted(item.keys()),
                         "result_type": type(result).__name__,
-                        "result_length": len(result) if isinstance(result, str) else None,
+                        "result_length": len(result)
+                        if isinstance(result, str)
+                        else None,
                     }
                 )
         logger.warning(

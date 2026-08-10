@@ -159,8 +159,20 @@ class GrokAdapter(BaseImageAdapter):
     ) -> str | None:
         """Validate and return the requested Grok aspect ratio."""
         accepted = accepted or [
-            "auto", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3",
-            "1:2", "2:1", "19.5:9", "9:19.5", "20:9", "9:20",
+            "auto",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "1:2",
+            "2:1",
+            "19.5:9",
+            "9:19.5",
+            "20:9",
+            "9:20",
         ]
         return request.aspect_ratio if request.aspect_ratio in accepted else None
 
