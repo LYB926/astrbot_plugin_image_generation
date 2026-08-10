@@ -32,6 +32,18 @@ class OpenAIAdapter(BaseImageAdapter):
         # auto: infer the family from the model name.
         return self.model is not None and "gpt-image" in self.model
 
+    def _image_filename(self, mime_type: str, index: int) -> str:
+        """Return a filename whose extension matches the uploaded image bytes."""
+        extension = {
+            "image/jpeg": ".jpg",
+            "image/png": ".png",
+            "image/webp": ".webp",
+            "image/gif": ".gif",
+            "image/heic": ".heic",
+            "image/heif": ".heif",
+        }.get((mime_type or "").lower(), ".png")
+        return f"reference_{index}{extension}"
+
     async def _generate_once(
         self, request: GenerationRequest
     ) -> tuple[list[bytes] | None, str | None]:
@@ -59,12 +71,12 @@ class OpenAIAdapter(BaseImageAdapter):
                 request.aspect_ratio, gpt_model=True
             ):
                 form.add_field("size", size)
-            for img in request.images:
+            for index, img in enumerate(request.images, start=1):
                 form.add_field(
                     "image[]",
                     img.data,
                     content_type=img.mime_type,
-                    filename="image",
+                    filename=self._image_filename(img.mime_type, index),
                 )
             kwargs: dict = {"data": form}
         else:
