@@ -283,15 +283,7 @@
           }
         },
         "grok": {
-          "name": "Grok (xAI) 接口",
-          "hint": "调用 xAI 官方 Images API：文生图 /v1/images/generations，图生图 /v1/images/edits；始终发送 application/json，单图用 image，多图用 images（最多 3 张）。",
-          "base_url": {
-            "description": "接口地址",
-            "hint": "可选。留空使用 https://api.x.ai；也可填写兼容接口根地址。插件会自动拼接 /v1/images/generations 或 /v1/images/edits。"
-          },
           "capability_options": {
-            "description": "模型能力",
-            "hint": "按当前模型实际能力勾选；未勾选的能力不会在请求中使用。",
             "labels": [
               "文生图",
               "图生图",
