@@ -854,8 +854,8 @@
             "hint": "用于 /生图模型 命令切换；请按账号实际可用模型维护。",
             "type": "list",
             "default": [
-              "grok-imagine-image-pro",
-              "grok-imagine-image"
+              "grok-imagine-image",
+              "grok-imagine-image-quality"
             ]
           },
           "capability_options": {
