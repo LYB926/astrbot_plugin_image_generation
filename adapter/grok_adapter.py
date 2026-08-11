@@ -4,8 +4,6 @@ import base64
 import time
 from typing import Any
 
-import aiohttp
-
 from ..core.adapters.base import BaseImageAdapter
 from ..core.shared.constants import UNSPECIFIED_OPTION
 from ..core.shared.logging import safe_log_error_body
@@ -24,9 +22,14 @@ class GrokAdapter(BaseImageAdapter):
     async def _generate_once(
         self, request: GenerationRequest
     ) -> tuple[list[bytes] | None, str | None]:
-        """Execute one image generation request."""
+        """Execute one image generation request.
+
+        Grok image generation and edits both require application/json. Image
+        edits carry reference images as base64 data URLs in the JSON body.
+        """
         start_time = time.time()
 
+        payload = self._build_payload(request)
         session = self._get_session()
 
         if request.images:
@@ -40,50 +43,20 @@ class GrokAdapter(BaseImageAdapter):
             # main.py strips /v1, so add it here consistently.
             url = f"{self.base_url.rstrip('/')}/v1{end_point}"
 
-        headers = {"Authorization": f"Bearer {self._get_current_api_key()}"}
-        if request.images:
-            form = aiohttp.FormData()
-            form.add_field("model", self.model or "grok-imagine-image")
-            form.add_field("prompt", request.prompt)
-            form.add_field("response_format", "b64_json")
-            if ratio := self._get_aspect_ratio(request):
-                form.add_field("aspect_ratio", ratio)
-            if resolution := self._get_resolution(request):
-                form.add_field("resolution", resolution)
-            for index, image in enumerate(request.images, start=1):
-                form.add_field(
-                    "image",
-                    image.data,
-                    content_type=image.mime_type,
-                    filename=self._image_filename(image.mime_type, index),
-                )
-            kwargs: dict[str, Any] = {"data": form}
-            self._log_request_overview(
-                request,
-                url,
-                form_fields=[
-                    "model",
-                    "prompt",
-                    "response_format",
-                    "aspect_ratio",
-                    "resolution",
-                    "image",
-                ],
-            )
-        else:
-            payload = self._build_payload(request)
-            headers["Content-Type"] = "application/json"
-            kwargs = {"json": payload}
-            self._log_request_overview(request, url, payload=payload)
-            self._log_debug_json("请求", payload, request.task_id)
+        headers = {
+            "Authorization": f"Bearer {self._get_current_api_key()}",
+            "Content-Type": "application/json",
+        }
+        self._log_request_overview(request, url, payload=payload)
+        self._log_debug_json("请求", payload, request.task_id)
 
         try:
             async with session.post(
                 url,
+                json=payload,
                 headers=headers,
                 proxy=self.proxy,
                 timeout=self._get_timeout(),
-                **kwargs,
             ) as resp:
                 duration = time.time() - start_time
                 self._log_response_status(request, resp.status, duration)
@@ -185,18 +158,6 @@ class GrokAdapter(BaseImageAdapter):
         accepted = accepted or ["1k", "2k"]
         value = (request.resolution or "").lower()
         return value if value != UNSPECIFIED_OPTION and value in accepted else None
-
-    def _image_filename(self, mime_type: str, index: int) -> str:
-        """Return a filename whose extension matches the uploaded image bytes."""
-        extension = {
-            "image/jpeg": ".jpg",
-            "image/png": ".png",
-            "image/webp": ".webp",
-            "image/gif": ".gif",
-            "image/heic": ".heic",
-            "image/heif": ".heif",
-        }.get((mime_type or "").lower(), ".png")
-        return f"reference_{index}{extension}"
 
     async def _extract_images(
         self, response: dict
