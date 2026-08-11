@@ -175,7 +175,7 @@
       "templates": {
         "gemini": {
           "name": "Gemini API",
-          "hint": "Call Gemini native image generation APIs.",
+          "hint": "Calls the Gemini native generateContent image API.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Optional. Leave empty to use the adapter default endpoint, or set a compatible endpoint."
@@ -213,7 +213,7 @@
         },
         "openai_chat": {
           "name": "OpenAI Chat compatible API",
-          "hint": "Call generic OpenAI Chat Completions compatible image generation APIs. Use this for models or relay services that return images from /v1/chat/completions.",
+          "hint": "Calls OpenAI-compatible Chat Completions image API /v1/chat/completions.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Enter an OpenAI Chat Completions compatible endpoint."
@@ -263,7 +263,7 @@
         },
         "openai": {
           "name": "OpenAI API",
-          "hint": "Call OpenAI image generation APIs.",
+          "hint": "Calls OpenAI Images API: /v1/images/generations and /v1/images/edits.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Optional. Leave empty to use the adapter default endpoint, or set a compatible endpoint."
@@ -310,7 +310,7 @@
         },
         "volcengine_ark": {
           "name": "Volcengine Ark API",
-          "hint": "Call the Volcengine Ark /api/v3/images/generations image generation API.",
+          "hint": "Calls Volcengine Ark image API /api/v3/images/generations.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Defaults to https://ark.cn-beijing.volces.com. You can also enter a full endpoint that includes /api/v3."
@@ -381,7 +381,7 @@
         },
         "siliconflow_adapter": {
           "name": "SiliconFlow API",
-          "hint": "Call the SiliconFlow /v1/images/generations image generation API.",
+          "hint": "Calls SiliconFlow image API /v1/images/generations.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Defaults to https://api.siliconflow.cn. You can also enter an endpoint that includes /v1; the plugin will normalize it automatically."
@@ -431,7 +431,7 @@
         },
         "gitee_ai": {
           "name": "Gitee AI API",
-          "hint": "Call Gitee AI /v1/images/generations and /v1/images/edits image APIs.",
+          "hint": "Calls Gitee AI image APIs /v1/images/generations and /v1/images/edits.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Defaults to https://ai.gitee.com. You can also enter a compatible endpoint."
@@ -478,7 +478,7 @@
         },
         "agnes_ai": {
           "name": "Agnes AI API",
-          "hint": "Agnes AI image generation API.",
+          "hint": "Calls Agnes AI image API /v1/images/generations.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Optional. Leave empty to use https://apihub.agnes-ai.com, or set a compatible endpoint."
@@ -524,7 +524,7 @@
         },
         "jimeng2api": {
           "name": "Jimeng reverse API",
-          "hint": "Call image generation services based on the iptag/jimeng-api project.",
+          "hint": "Calls jimeng-api image APIs /v1/images/generations and /v1/images/compositions.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Enter the jimeng-api service endpoint."
@@ -562,7 +562,7 @@
         },
         "grok": {
           "name": "Grok (xAI) API",
-          "hint": "Call Grok image generation APIs.",
+          "hint": "Calls xAI Images API: /v1/images/generations and /v1/images/edits.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Optional. Leave empty to use the adapter default endpoint, or set a compatible endpoint."
@@ -600,7 +600,7 @@
         },
         "codex_responses": {
           "name": "Codex Responses API",
-          "hint": "Calls the fixed POST /codex/responses image-generation endpoint. The request always contains model, input, and an image_generation tool with output_format=png, and the API must return the image in the same response.",
+          "hint": "Calls Codex Responses image API /codex/responses.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Enter the official OpenAI Codex endpoint https://chatgpt.com/backend-api/codex/responses, or its service root https://chatgpt.com/backend-api. The plugin normalizes the URL and appends /codex/responses; do not include query parameters."
@@ -620,7 +620,10 @@
           "capability_options": {
             "description": "Model capabilities",
             "hint": "This protocol supports text-to-image and image editing. When reference images are present, they are sent through a multimodal Responses input; aspect ratios and resolutions are not sent to the Codex Responses request.",
-            "labels": ["Text to image", "Image to image"]
+            "labels": [
+              "Text to image",
+              "Image to image"
+            ]
           },
           "timeout": {
             "description": "Timeout override (seconds)",
@@ -633,7 +636,7 @@
         },
         "modelscope": {
           "name": "ModelScope asynchronous API",
-          "hint": "Calls the ModelScope API-Inference asynchronous image API. The plugin submits a task, polls its state, and downloads the result without creating a second task after task_id is received.",
+          "hint": "Calls ModelScope async image API /v1/images/generations with task polling.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Defaults to https://api-inference.modelscope.cn. You may enter the service root or an address ending in /v1; the plugin appends image-generation and task-status paths."
@@ -653,7 +656,12 @@
           "capability_options": {
             "description": "Model capabilities",
             "hint": "Qwen/Qwen-Image defaults to text-to-image only. Enable image-to-image only after confirming the selected model supports editing; aspect ratio and resolution use configured size mappings.",
-            "labels": ["Text to image", "Image to image", "Aspect ratio", "Resolution"]
+            "labels": [
+              "Text to image",
+              "Image to image",
+              "Aspect ratio",
+              "Resolution"
+            ]
           },
           "timeout": {
             "description": "Timeout override (seconds)",
@@ -686,7 +694,7 @@
         },
         "custom_http": {
           "name": "Custom HTTP API (Beta)",
-          "hint": "Advanced configuration: customize JSON request bodies, request headers, and response image extraction paths for HTTP image APIs that return base64, data URLs, or image URLs.",
+          "hint": "Custom HTTP JSON image API.",
           "base_url": {
             "description": "API endpoint",
             "hint": "Base API endpoint. The custom HTTP adapter does not automatically remove the /v1 path."
