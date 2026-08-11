@@ -47,7 +47,7 @@
 | `siliconflow_adapter` | SiliconFlow Images API `/v1/images/generations`                |   ✅    |   ✅    |    ✅     | 支持 Kolors、Qwen-Image、Qwen-Image-Edit、Z-Image，并可配置反向提示词、步数和提示词遵循强度。   |
 | `agnes_ai`            | Agnes AI Images API `/v1/images/generations`                   |   ✅    |   ✅    |    ✅     | 支持 `agnes-image-2.0-flash` 和 `agnes-image-2.1-flash`；参考图通过 `extra_body.image` 数组发送。 |
 | `jimeng2api`          | jimeng-api `/v1/images/generations`、`/v1/images/compositions` |   ✅    |   ✅    |    ✅     | 适用于 [iptag/jimeng-api](https://github.com/iptag/jimeng-api)，支持启动和每日自动领积分任务。   |
-| `grok`                | xAI Images API `/v1/images/generations`、`/v1/images/edits`    |   ✅    |   ✅    |    ✅     | Grok / xAI 图像生成接口。                                                                       |
+| `grok`                | xAI Images API `/v1/images/generations`、`/v1/images/edits`    |   ✅    |   ✅    |    ✅     | 按 xAI 官方 JSON 格式请求；单图用 `image`，多图用 `images`（最多 3 张）。                       |
 | `codex_responses`     | Codex Responses API `/codex/responses`                         |   ✅    |   ✅    |    ❌     | 固定请求 `model`、`input` 和 `image_generation` 工具；支持同步图像编辑。                         |
 | `modelscope`          | ModelScope API-Inference `/v1/images/generations` + task poll  |   ✅    | 按配置 | 按配置 | 异步提交、轮询并下载结果；收到远端任务 ID 后不会自动重新提交；详见 [ModelScope 接口配置](docs/modelscope.md)。 |
 | `custom_http`         | 用户自定义 HTTP JSON 接口                                      |   ✅    |   ✅    |    ✅     | 高级接口模板，详见 [自定义 HTTP 接口配置](docs/custom-http.md)。                                |

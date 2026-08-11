@@ -562,10 +562,10 @@
         },
         "grok": {
           "name": "Grok (xAI) API",
-          "hint": "Call Grok image generation APIs.",
+          "hint": "Calls the official xAI Images API: text-to-image via /v1/images/generations and image editing via /v1/images/edits. Always sends application/json. A single reference image uses image; multiple references use images (up to 3).",
           "base_url": {
             "description": "API endpoint",
-            "hint": "Optional. Leave empty to use the adapter default endpoint, or set a compatible endpoint."
+            "hint": "Optional. Leave empty to use https://api.x.ai, or set a compatible endpoint root. The plugin appends /v1/images/generations or /v1/images/edits."
           },
           "proxy": {
             "description": "Proxy URL",

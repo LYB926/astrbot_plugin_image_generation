@@ -821,7 +821,7 @@
       },
       "grok": {
         "name": "Grok (xAI) 接口",
-        "hint": "调用 Grok 图像生成接口。",
+        "hint": "调用 xAI 官方 Images API：文生图 /v1/images/generations，图生图 /v1/images/edits；始终发送 application/json，单图用 image，多图用 images（最多 3 张）。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
