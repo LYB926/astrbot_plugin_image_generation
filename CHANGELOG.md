@@ -1,7 +1,10 @@
 ### 更新日志
+- **v1.6.3-2026-08-12**
+  - 修复 Grok 图生图 `415 图片编辑仅支持 application/json`：图生图/编辑请求改回始终发送 `application/json`，参考图以 base64 data URL 写入 `images` 字段，不再使用 `multipart/form-data`。
+
 - **v1.6.2-2026-08-10**
-  - 修复 OpenAI / Grok 图生图上传格式：按真实 MIME 设置参考图文件名扩展名，避免兼容接口把 JPEG 误判为 PNG；Grok 图生图改为 `multipart/form-data` 通过 `image` 字段上传（#59）。
-  - 自定义 HTTP 适配器新增可空参考图占位符 `{reference_images_base64_nullable}` / `{reference_images_data_url_nullable}`：无参考图时省略对应 JSON 字段，兼容要求参考图数组至少 1 项的接口（#58）。
+  - 合并 [PR #59](https://github.com/Railgun19457/astrbot_plugin_image_generation/pull/59)（@SatellIta）：修复 OpenAI / Grok 图生图上传格式，按真实 MIME 设置参考图文件名扩展名，避免兼容接口把 JPEG 误判为 PNG；Grok 图生图改为 `multipart/form-data` 通过 `image` 字段上传。
+  - 合并 [PR #58](https://github.com/Railgun19457/astrbot_plugin_image_generation/pull/58)（@HuajiSoup）：自定义 HTTP 适配器新增可空参考图占位符 `{reference_images_base64_nullable}` / `{reference_images_data_url_nullable}`，无参考图时省略对应 JSON 字段，兼容要求参考图数组至少 1 项的接口。
 
 - **v1.6.1-2026-08-03**
   - OpenAI GPT Image 文生图请求启用 SSE，支持解析跨传输分块的完成与错误事件，并保留非 SSE JSON 响应兼容。
