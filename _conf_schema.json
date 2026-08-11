@@ -22,7 +22,7 @@
     "templates": {
       "gemini": {
         "name": "Gemini 接口",
-        "hint": "调用 Gemini 原生图像生成接口。",
+        "hint": "调用 Gemini 原生 generateContent 图像接口。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -103,7 +103,7 @@
       },
       "openai_chat": {
         "name": "OpenAI Chat 兼容接口",
-        "hint": "调用通用 OpenAI Chat Completions 兼容图像生成接口，适用于能在 /v1/chat/completions 返回图片的模型或中转服务。",
+        "hint": "调用 OpenAI 兼容 Chat Completions 图像接口 /v1/chat/completions。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -204,7 +204,7 @@
       },
       "openai": {
         "name": "OpenAI 接口",
-        "hint": "调用 OpenAI 图像生成接口。",
+        "hint": "调用 OpenAI Images API：/v1/images/generations、/v1/images/edits。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -297,7 +297,7 @@
       },
       "volcengine_ark": {
         "name": "火山方舟接口",
-        "hint": "调用火山方舟 /api/v3/images/generations 图像生成接口。",
+        "hint": "调用火山方舟图像接口 /api/v3/images/generations。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -434,7 +434,7 @@
       },
       "siliconflow_adapter": {
         "name": "硅基流动接口",
-        "hint": "调用 SiliconFlow /v1/images/generations 图像生成接口。",
+        "hint": "调用 SiliconFlow 图像接口 /v1/images/generations。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -539,7 +539,7 @@
       },
       "gitee_ai": {
         "name": "Gitee AI 接口",
-        "hint": "调用 Gitee AI /v1/images/generations 与 /v1/images/edits 图像接口。",
+        "hint": "调用 Gitee AI 图像接口 /v1/images/generations、/v1/images/edits。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -651,7 +651,7 @@
       },
       "agnes_ai": {
         "name": "Agnes AI 接口",
-        "hint": "Agnes AI 图像生成接口。",
+        "hint": "调用 Agnes AI 图像接口 /v1/images/generations。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -741,7 +741,7 @@
       },
       "jimeng2api": {
         "name": "即梦逆向接口",
-        "hint": "调用 iptag/jimeng-api 项目的图像生成接口。",
+        "hint": "调用 jimeng-api 图像接口 /v1/images/generations、/v1/images/compositions。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -821,7 +821,7 @@
       },
       "grok": {
         "name": "Grok (xAI) 接口",
-        "hint": "调用 xAI 官方 Images API：文生图 /v1/images/generations，图生图 /v1/images/edits",
+        "hint": "调用 xAI Images API：/v1/images/generations、/v1/images/edits。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -901,7 +901,7 @@
       },
       "modelscope": {
         "name": "ModelScope 异步接口",
-        "hint": "调用 ModelScope API-Inference 异步图像生成接口。插件会提交任务、轮询状态并下载结果；提交成功后不会自动创建第二个远端任务。",
+        "hint": "调用 ModelScope 异步图像接口 /v1/images/generations 与任务轮询。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -1019,7 +1019,7 @@
       },
       "codex_responses": {
         "name": "Codex Responses 接口",
-        "hint": "调用固定的 POST /codex/responses 图像生成接口。请求体固定使用 model、input 和 image_generation 工具（output_format=png），并要求接口在同一次响应中返回图片。",
+        "hint": "调用 Codex Responses 图像接口 /codex/responses。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
@@ -1092,7 +1092,7 @@
       },
       "custom_http": {
         "name": "自定义 HTTP 接口(Beta)",
-        "hint": "高级配置：自定义 JSON 请求体、请求头和响应图片提取路径，适配任意返回 base64、data URL 或图片 URL 的 HTTP 生图接口。",
+        "hint": "自定义 HTTP JSON 图像接口。",
         "display_item": "name",
         "hide_hint_in_list": true,
         "items": {
