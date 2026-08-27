@@ -29,7 +29,11 @@ from .core.tasks.models import (
 )
 from .core.adapters.generator import ImageGenerator
 from .core.generation.image_processor import ImageProcessor
-from .core.llm.command_handoff import try_request_llm_handoff
+from .core.llm.command_handoff import (
+    HANDOFF_EVENT_EXTRA_KEY,
+    clamp_request_to_handoff_tools,
+    try_request_llm_handoff,
+)
 from .core.llm.result_handler import LLMResultHandler
 from .core.llm.tools import (
     ImageGenerationTool,
@@ -147,6 +151,32 @@ class ImageGenerationPlugin(Star):
         self.page_api.register()
 
     # Lifecycle.
+
+    @filter.on_llm_request()
+    async def on_llm_request_clamp_handoff_tools(
+        self,
+        event: AstrMessageEvent,
+        req: Any,
+    ) -> None:
+        """After AstrBot merges persona tools, keep handoff on generate_image only."""
+        if not event.get_extra(HANDOFF_EVENT_EXTRA_KEY):
+            return
+        before = (
+            list(req.func_tool.names())
+            if getattr(req, "func_tool", None)
+            else []
+        )
+        if not clamp_request_to_handoff_tools(self.context, req):
+            logger.warning(
+                f"{LOG} handoff 工具收紧失败，本轮仍可能挂载其它工具: "
+                f"before={before}"
+            )
+            return
+        after = list(req.func_tool.names()) if req.func_tool else []
+        if before != after:
+            logger.info(
+                f"{LOG} handoff 工具已收紧: before={before} → after={after}"
+            )
 
     async def initialize(self):
         """Run when the plugin is loaded."""
