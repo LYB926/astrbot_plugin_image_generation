@@ -9,20 +9,12 @@ from astrbot.api.message_components import Image, Reply
 
 from ..shared.logging import log_prefix, mask_sensitive, safe_log_text
 
-# Registered FunctionTool.name (config label "生图工具" is different).
-HANDOFF_TOOL_NAME = "generate_image"
-
 if TYPE_CHECKING:
     from astrbot.api.event import AstrMessageEvent
     from astrbot.api.provider import ProviderRequest
     from astrbot.api.star import Context
-    from astrbot.core.agent.tool import ToolSet
 
 LOG = log_prefix("CommandHandoff")
-
-# event.extra key: mark /生图 handoff so on_llm_request can re-clamp tools
-# after AstrBot merges persona / builtin tools onto the ProviderRequest.
-HANDOFF_EVENT_EXTRA_KEY = "image_gen_command_handoff"
 
 HANDOFF_SYSTEM_PROMPT = """\
 用户通过 /生图 命令请求生成或修改图片。你必须调用 generate_image 工具完成出图，不要只用文字空谈或假装已画图。
@@ -30,59 +22,7 @@ HANDOFF_SYSTEM_PROMPT = """\
 结合当前人设与对话上下文理解用户意图，编写具体、可独立理解的视觉 prompt；涉及自身形象、角色或人设时，优先填写 persona（若工具可用）并写清外观，不要把用户的模糊原话原样塞进 prompt。
 
 工具返回任务已提交后，用符合人设的简短语气确认即可，不要复述技术细节或重复调用 generate_image。
-本轮仅可使用 generate_image，不要调用其它工具。
 """.strip()
-
-
-def build_handoff_tool_set(context: Context) -> ToolSet | None:
-    """Restrict handoff to generate_image only (avoid other tools / loop strip)."""
-    try:
-        from astrbot.core.agent.tool import ToolSet
-    except Exception:
-        logger.warning(f"{LOG} 无法导入 ToolSet", exc_info=True)
-        return None
-
-    get_manager = getattr(context, "get_llm_tool_manager", None)
-    if not callable(get_manager):
-        return None
-    try:
-        manager = get_manager()
-    except Exception:
-        logger.warning(f"{LOG} 获取 LLM 工具管理器失败", exc_info=True)
-        return None
-    if manager is None:
-        return None
-
-    tool = None
-    get_func = getattr(manager, "get_func", None)
-    if callable(get_func):
-        try:
-            tool = get_func(HANDOFF_TOOL_NAME)
-        except Exception:
-            logger.debug(f"{LOG} get_func({HANDOFF_TOOL_NAME}) 失败", exc_info=True)
-            tool = None
-    if tool is None:
-        logger.warning(f"{LOG} 未找到工具 {HANDOFF_TOOL_NAME}，handoff 回退")
-        return None
-    if hasattr(tool, "active") and not bool(getattr(tool, "active", True)):
-        logger.warning(f"{LOG} 工具 {HANDOFF_TOOL_NAME} 未激活，handoff 回退")
-        return None
-
-    tool_set = ToolSet()
-    tool_set.add_tool(tool)
-    return tool_set
-
-
-def clamp_request_to_handoff_tools(
-    context: Context,
-    req: Any,
-) -> bool:
-    """Force req.func_tool to only generate_image. Returns True if clamped."""
-    tool_set = build_handoff_tool_set(context)
-    if tool_set is None:
-        return False
-    req.func_tool = tool_set
-    return True
 
 
 def build_handoff_prompt(*, raw_demand: str, image_count: int | None = None) -> str:
@@ -208,46 +148,28 @@ async def try_request_llm_handoff(
         )
         return None
 
-    tool_set = build_handoff_tool_set(context)
-    if tool_set is None:
-        logger.warning(
-            f"{LOG} 无法构建仅含 generate_image 的工具集，/生图 回退为直接执行指令: "
-            f"用户={masked_uid}"
-        )
-        return None
-
     conversation = await resolve_session_conversation(context, event)
     image_urls = await collect_handoff_image_urls(event)
     prompt = build_handoff_prompt(raw_demand=raw_demand, image_count=image_count)
-
-    set_extra = getattr(event, "set_extra", None)
-    if callable(set_extra):
-        set_extra(HANDOFF_EVENT_EXTRA_KEY, True)
 
     logger.info(
         f"{LOG} 将 /生图 交给会话 LLM: 用户={masked_uid}，"
         f"需求长度={len(str(raw_demand or '').strip())}，"
         f"数量={image_count if image_count is not None else '默认'}，"
         f"参考图={len(image_urls)}，"
-        f"conversation={'有' if conversation is not None else '无'}，"
-        f"tools={tool_set.names() if hasattr(tool_set, 'names') else [HANDOFF_TOOL_NAME]}"
+        f"conversation={'有' if conversation is not None else '无'}"
     )
     return event.request_llm(
         prompt=prompt,
         system_prompt=HANDOFF_SYSTEM_PROMPT,
         conversation=conversation,
         image_urls=image_urls,
-        tool_set=tool_set,
     )
 
 
 __all__ = (
-    "HANDOFF_EVENT_EXTRA_KEY",
     "HANDOFF_SYSTEM_PROMPT",
-    "HANDOFF_TOOL_NAME",
     "build_handoff_prompt",
-    "build_handoff_tool_set",
-    "clamp_request_to_handoff_tools",
     "collect_handoff_image_urls",
     "resolve_session_conversation",
     "try_request_llm_handoff",

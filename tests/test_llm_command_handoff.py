@@ -114,69 +114,6 @@ class BuildHandoffPromptTests(unittest.TestCase):
         self.assertIn("image_count=3", text)
         self.assertIn("用户请求生成数量：3", text)
 
-    def test_system_prompt_forbids_other_tools(self):
-        self.assertIn("generate_image", command_handoff.HANDOFF_SYSTEM_PROMPT)
-        self.assertIn("不要调用其它工具", command_handoff.HANDOFF_SYSTEM_PROMPT)
-
-
-class BuildHandoffToolSetTests(unittest.TestCase):
-    def test_returns_none_without_manager(self):
-        class Ctx:
-            pass
-
-        self.assertIsNone(command_handoff.build_handoff_tool_set(Ctx()))
-
-    def test_builds_single_tool_set(self):
-        class Tool:
-            name = command_handoff.HANDOFF_TOOL_NAME
-            active = True
-
-        class Mgr:
-            def get_func(self, name):
-                return Tool() if name == command_handoff.HANDOFF_TOOL_NAME else None
-
-        class Ctx:
-            def get_llm_tool_manager(self):
-                return Mgr()
-
-        try:
-            tool_set = command_handoff.build_handoff_tool_set(Ctx())
-        except Exception as exc:  # pragma: no cover
-            self.skipTest(f"ToolSet unavailable in unit env: {exc}")
-            return
-        if tool_set is None:
-            self.skipTest("ToolSet build returned None in unit env")
-            return
-        self.assertEqual(tool_set.names(), [command_handoff.HANDOFF_TOOL_NAME])
-
-    def test_clamp_replaces_func_tool(self):
-        class Tool:
-            name = command_handoff.HANDOFF_TOOL_NAME
-            active = True
-
-        class Mgr:
-            def get_func(self, name):
-                return Tool() if name == command_handoff.HANDOFF_TOOL_NAME else None
-
-        class Ctx:
-            def get_llm_tool_manager(self):
-                return Mgr()
-
-        class Req:
-            def __init__(self):
-                self.func_tool = object()
-
-        req = Req()
-        try:
-            ok = command_handoff.clamp_request_to_handoff_tools(Ctx(), req)
-        except Exception as exc:  # pragma: no cover
-            self.skipTest(f"ToolSet unavailable in unit env: {exc}")
-            return
-        if not ok:
-            self.skipTest("clamp returned False in unit env")
-            return
-        self.assertEqual(req.func_tool.names(), [command_handoff.HANDOFF_TOOL_NAME])
-
 
 class ShouldLlmHandleCommandTests(unittest.TestCase):
     def _config(
